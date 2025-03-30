@@ -38,34 +38,34 @@ func NewConfig(path string) *Config {
 	}
 
 	if _, err := os.Stat(indexFile); os.IsNotExist(err) {
-		index, err := config.Create()
+		index, err := config.create()
 		if err != nil {
 			panic(err)
 		}
 
 		config.IndexArr = index
-		config.ShuffleIndex()
-		config.CurrentIndex = config.PickRandom()
+		config.shuffleIndex()
+		config.CurrentIndex = config.pickRandomIndex()
 
 		err = config.IndexToJson()
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		existingConfig, err := ReadIndex()
+		existingConfig, err := readIndex()
 		if err != nil {
 			panic(err)
 		}
 
 		if existingConfig.Path != config.Path {
-			index, err := config.Create()
+			index, err := config.create()
 			if err != nil {
 				panic(err)
 			}
 
 			config.IndexArr = index
-			config.ShuffleIndex()
-			config.CurrentIndex = config.PickRandom()
+			config.shuffleIndex()
+			config.CurrentIndex = config.pickRandomIndex()
 
 			err = config.IndexToJson()
 			if err != nil {
@@ -84,7 +84,7 @@ func (c *Config) Len() int {
 	return len(c.IndexArr)
 }
 
-func (c *Config) Next() int {
+func (c *Config) nextIndex() int {
 	c.CurrentIndex++
 	if c.CurrentIndex >= c.Len() {
 		c.CurrentIndex = 0
@@ -92,7 +92,7 @@ func (c *Config) Next() int {
 	return c.CurrentIndex
 }
 
-func (c *Config) Prev() int {
+func (c *Config) prevIndex() int {
 	c.CurrentIndex--
 	if c.CurrentIndex < 0 {
 		c.CurrentIndex = c.Len() - 1
@@ -100,17 +100,17 @@ func (c *Config) Prev() int {
 	return c.CurrentIndex
 }
 
-func (c *Config) PickRandom() int {
+func (c *Config) pickRandomIndex() int {
 	return rand.Intn(c.Len())
 }
 
-func (c *Config) ShuffleIndex() {
+func (c *Config) shuffleIndex() {
 	rand.Shuffle(len(c.IndexArr), func(a, b int) {
 		c.IndexArr[a], c.IndexArr[b] = c.IndexArr[b], c.IndexArr[a]
 	})
 }
 
-func (c *Config) Create() ([]string, error) {
+func (c *Config) create() ([]string, error) {
 	var imagePaths []string
 
 	err := filepath.Walk(c.Path, func(path string, info os.FileInfo, err error) error {
@@ -158,7 +158,7 @@ func (c *Config) IndexToJson() error {
 	return os.WriteFile(wallsliderFile, data, 0644)
 }
 
-func ReadIndex() (*Config, error) {
+func readIndex() (*Config, error) {
 	wallsliderFile, err := getUserConfigFile()
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func ReadIndex() (*Config, error) {
 }
 
 func (c *Config) Random() error {
-	newIndex := c.PickRandom()
+	newIndex := c.pickRandomIndex()
 	c.CurrentIndex = newIndex
 	err := executeWithPath(c.IndexArr[newIndex])
 	fmt.Println("Setting wallpaper:", c.IndexArr[newIndex])
@@ -189,7 +189,7 @@ func (c *Config) Random() error {
 }
 
 func (c *Config) NextWallpaper() error {
-	c.Next()
+	c.nextIndex()
 	err := executeWithPath(c.IndexArr[c.CurrentIndex])
 	fmt.Println("Setting wallpaper:", c.IndexArr[c.CurrentIndex])
 	if err != nil {
@@ -199,7 +199,7 @@ func (c *Config) NextWallpaper() error {
 }
 
 func (c *Config) PrevWallpaper() error {
-	c.Prev()
+	c.prevIndex()
 	err := executeWithPath(c.IndexArr[c.CurrentIndex])
 	fmt.Println("Setting wallpaper:", c.IndexArr[c.CurrentIndex])
 	if err != nil {
@@ -211,7 +211,7 @@ func (c *Config) PrevWallpaper() error {
 // Reindex regenerates the image index from the configured path, shuffles it,
 // and resets the current position
 func (c *Config) Reindex() error {
-	index, err := c.Create()
+	index, err := c.create()
 	if err != nil {
 		return fmt.Errorf("failed to create new index: %w", err)
 	}
@@ -221,8 +221,8 @@ func (c *Config) Reindex() error {
 	}
 
 	c.IndexArr = index
-	c.ShuffleIndex()
-	c.CurrentIndex = c.PickRandom()
+	c.shuffleIndex()
+	c.CurrentIndex = c.pickRandomIndex()
 
 	return c.IndexToJson()
 }
