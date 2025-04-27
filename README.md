@@ -13,8 +13,8 @@ A simple tool to switch wallpapers
 
 # Requirements
 - Golang
-- In X11 - Nitrogen
-- In wayland - swww
+- In X11 - [Nitrogen](https://github.com/l3ib/nitrogen)
+- In wayland - [swww](https://github.com/LGFae/swww)
 
 # Features
 - reindex     - Refresh the wallpaper index
