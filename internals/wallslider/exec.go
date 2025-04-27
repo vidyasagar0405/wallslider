@@ -3,6 +3,7 @@ package wallslider
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -32,6 +33,14 @@ func execCommand(cmd string) error {
 	return nil
 }
 
-func  executeWithPath(path string) error {
-	return execCommand("nitrogen --set-zoom-fill " + path + " --save")
+func executeWithPath(path string) error {
+	sessionType := os.Getenv("XDG_SESSION_TYPE")
+	switch strings.ToLower(sessionType) {
+	case "wayland":
+		return execCommand("swww img " + path)
+	case "x11":
+		return execCommand("nitrogen --set-zoom-fill " + path + " --save")
+	default:
+		return fmt.Errorf("unknown or unset XDG_SESSION_TYPE: %q", sessionType)
+	}
 }
